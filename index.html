@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue Js is very Fun - Robby Benta</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="row justify-content-center">
+        <div class="mb-5">
+          <input class="url" type="text" v-model="url" />
+        </div>
+      </div>
+
+      <div class="row justify-content-center">
+        <div class="col-md-6 ">
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control keyword"
+              placeholder="Apa yang ingin anda cari ?"
+              aria-label="Recipient's username"
+              aria-describedby="button-addon2"
+              v-model="keyword"
+            />
+            <div class="input-group-append">
+              <button
+                class="btn btn-warning bersihkan"
+                @click="clean"
+                type="button"
+                id="button-addon2"
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row justify-content-center">
+        <ul class="daftar">
+          <li v-for="(list,indeks) in listResult" :key="indeks">
+            <span style="font-weight: bolder;" v-html="list.text"></span>
+            <a
+              style="color:#E0A800"
+              :href="url + '&t=' + list.start +'s'"
+              target="_blank"
+              ><b>Youtube</b></a
+            >
+          </li>
+        </ul>
+      </div>
+      <!-- <div class="mb-5">
+        <input class="kataKunci rounded-pill" type="text" v-model="kataKunci" />
+        <button class="bersihkan" @click="bersihkan">Bersihkan</button>
+      </div> -->
+      <div class="row justify-content-center">
+        <div class="mt-5">
+          <button
+            @click="firstPagination"
+            :disabled="!pagination.first"
+            type="button"
+            class="pertama btn btn-light"
+          >
+            First
+          </button>
+          <button
+            @click="prevPagination"
+            :disabled="!pagination.prev"
+            type="button"
+            class="sebelumnya btn btn-light"
+          >
+            Prev
+          </button>
+          <button
+            @click="nextPagination"
+            :disabled="!pagination.next"
+            type="button"
+            class="selanjutnya btn btn-light"
+          >
+            Next
+          </button>
+          <button
+            @click="lastPagination"
+            :disabled="!pagination.last"
+            type="button"
+            class="terakhir btn btn-light"
+          >
+            Last
+          </button>
+        </div>
+      </div>
+
+      <div class="row justify-content-center  mt-2">
+        <div class="total pr-5">
+          <h3>Total Hasil: {{pagination.total}}</h3>
+        </div>
+        <div class="halaman"><h3>Halaman Ke:{{pagination.page}}</h3></div>
+      </div>
+      <div class="row justify-content-center mt-5 pt-5">
+        <h5>Made By Robby Benta</h5>
+      </div>
+      <!-- <div class="mb-5">
+        <pre>{{jadikanStringPaginasi}}</pre>
+      </div>
+      <div class="mb-5">
+        <pre>{{jadikanStringDaftarHasil}}</pre>
+      </div> -->
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="./index.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+      integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+      integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      new Vue({
+        el: '#app',
+        data: {
+          url: 'https://www.youtube.com/watch?v=klnvttPfOUM',
+          keyword: '',
+          listResult: [],
+          pagination: {
+            first: null,
+            last: null,
+            prev: null,
+            next: null,
+            total: 0,
+            page: null
+          }
+        },
+        computed: {
+          stringPagination () {
+            return JSON.stringify(this.pagination, null, 2)
+          },
+          stringResult () {
+            return JSON.stringify(this.listResult, null, 2)
+          }
+        },
+        watch: {
+          keyword: pDebounce(function keyword (keyword) {
+            this.search(keyword, this.url)
+          }, 250)
+        },
+        methods: {
+          async search (keyword, url, pagination) {
+            let urlApi = `https://cari-teks-video-api.vercel.app/api/search?q=${keyword}&url=${encodeURIComponent(
+              url
+            )}`
+            if (pagination) {
+              urlApi = pagination
+            }
+            const respon = await fetch(urlApi).then(_respon => {
+              if (_respon.ok) {
+                return _respon.json()
+              }
+              return []
+            })
+            this.listResult = respon.data
+            this.pagination.first = respon.first
+            this.pagination.last = respon.last
+            this.pagination.prev = respon.prev
+            this.pagination.next = respon.next
+            this.pagination.total = respon.total
+            this.pagination.page = respon.page
+          },
+          clean () {
+            this.keyword = ''
+          },
+          firstPagination () {
+            this.search(this.keyword, this.url, this.pagination.first)
+          },
+          prevPagination () {
+            this.search(this.keyword, this.url, this.pagination.prev)
+          },
+          nextPagination () {
+            this.search(this.keyword, this.url, this.pagination.next)
+          },
+          lastPagination () {
+            this.search(this.keyword, this.url, this.pagination.last)
+          }
+        }
+      })
+    </script>
+  </body>
+</html>
